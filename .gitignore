@@ -24,3 +24,7 @@ wandb/
 .vscode/
 .idea/
 .DS_Store
+
+# others
+*.whl
+
