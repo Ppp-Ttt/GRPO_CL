@@ -1,0 +1,26 @@
+# Python cache/env
+__pycache__/
+*.pyc
+.venv/
+.env
+
+# Model/data/artifacts
+base_models/
+data/
+checkpoints/
+eval_results/
+outputs/
+logs/
+wandb/
+*.pt
+*.pth
+*.bin
+*.safetensors
+*.ckpt
+*.tar
+*.zip
+
+# IDE/system
+.vscode/
+.idea/
+.DS_Store
