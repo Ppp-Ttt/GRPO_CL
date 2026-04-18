@@ -33,7 +33,7 @@ from io import StringIO
 from unittest.mock import mock_open, patch
 
 import numpy as np
-from pyext import RuntimeModule
+from .pyext import RuntimeModule
 
 
 def truncatefn(s, length=300):

@@ -1,5 +1,7 @@
 import argparse
 import ast
+import json
+import sys
 import time
 from collections import defaultdict
 from pathlib import Path
@@ -9,7 +11,12 @@ import pandas as pd
 from tqdm.contrib.concurrent import process_map
 from vllm import LLM, SamplingParams
 
-from math_dapo import compute_score
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+VERL_PACKAGE_ROOT = PROJECT_ROOT / "verl"
+if str(VERL_PACKAGE_ROOT) not in sys.path:
+    sys.path.insert(0, str(VERL_PACKAGE_ROOT))
+
+from verl.utils.reward_score.prime_code import compute_score  # noqa: E402
 
 
 def str2bool(v: str) -> bool:
@@ -53,9 +60,46 @@ def parse_messages(prompt_obj: Any) -> list[dict[str, str]]:
     return messages
 
 
-def verify(arg):
-    rsp, reward_model = arg
-    return compute_score(rsp, reward_model["ground_truth"])
+def parse_reward_model(reward_model_obj: Any) -> dict[str, Any]:
+    if isinstance(reward_model_obj, dict):
+        return reward_model_obj
+
+    if isinstance(reward_model_obj, str):
+        for parser in (json.loads, ast.literal_eval):
+            try:
+                parsed = parser(reward_model_obj)
+                if isinstance(parsed, dict):
+                    return parsed
+            except Exception:
+                continue
+
+    return {}
+
+
+def verify(arg: tuple[str, Any]) -> dict[str, Any]:
+    rsp, reward_model_obj = arg
+    reward_model = parse_reward_model(reward_model_obj)
+    ground_truth = reward_model.get("ground_truth")
+
+    if ground_truth is None:
+        return {
+            "score": 0.0,
+            "metadata": None,
+            "error": "missing reward_model.ground_truth",
+        }
+
+    try:
+        score, metadata = compute_score(rsp, ground_truth, continuous=True)
+        return {
+            "score": float(score),
+            "metadata": metadata,
+        }
+    except Exception as e:
+        return {
+            "score": 0.0,
+            "metadata": None,
+            "error": repr(e),
+        }
 
 
 def main(args):
@@ -90,7 +134,15 @@ def main(args):
     print(f"Time taken: {end - start} seconds")
 
     df["output"] = [o.outputs[0].text if o.outputs else "" for o in outputs]
-    df["res"] = process_map(verify, df[["output", "reward_model"]].values, max_workers=50, chunksize=1)
+    df["res"] = process_map(
+        verify,
+        df[["output", "reward_model"]].values,
+        max_workers=args.eval_workers,
+        chunksize=1,
+    )
+
+    df["score"] = df["res"].apply(lambda x: float(x.get("score", 0.0)) if isinstance(x, dict) else 0.0)
+    df["pass"] = df["score"].apply(lambda x: 1.0 if x >= 1.0 else 0.0)
 
     timestamp = time.strftime("%m%d_%H%M", time.localtime())
     output_dir = Path(args.output_dir)
@@ -99,37 +151,60 @@ def main(args):
     df.to_json(out_path, orient="records", lines=True, force_ascii=False)
     print(f"Saved: {out_path}")
 
-    df["acc"] = df["res"].apply(lambda x: x.get("acc", 0) if isinstance(x, dict) else 0)
-    avg_score = df["acc"].mean() if len(df) > 0 else 0.0
-    print(f"acc/mean@32: {avg_score}")
+    avg_score = df["score"].mean() if len(df) > 0 else 0.0
+    pass_rate = df["pass"].mean() if len(df) > 0 else 0.0
+    print(f"score/mean@32: {avg_score}")
+    print(f"pass@1/mean@32: {pass_rate}")
 
-    source_acc = defaultdict(list)
+    source_scores = defaultdict(list)
+    source_pass = defaultdict(list)
     if "data_source" in df.columns:
         for _, row in df.iterrows():
-            source_acc[str(row["data_source"])].append(row["acc"])
+            src = str(row["data_source"])
+            source_scores[src].append(row["score"])
+            source_pass[src].append(row["pass"])
     else:
         for _, row in df.iterrows():
-            source_acc["unknown"].append(row["acc"])
+            source_scores["unknown"].append(row["score"])
+            source_pass["unknown"].append(row["pass"])
 
-    source_means = {
+    source_score_means = {
         source: (sum(vals) / len(vals) if vals else 0.0)
-        for source, vals in source_acc.items()
+        for source, vals in source_scores.items()
     }
-    source_level_acc = (
-        sum(source_means.values()) / len(source_means) if source_means else 0.0
+    source_pass_means = {
+        source: (sum(vals) / len(vals) if vals else 0.0)
+        for source, vals in source_pass.items()
+    }
+
+    source_level_score = (
+        sum(source_score_means.values()) / len(source_score_means) if source_score_means else 0.0
     )
-    print(f"acc_by_data_source/mean@32: {source_level_acc}")
+    source_level_pass = (
+        sum(source_pass_means.values()) / len(source_pass_means) if source_pass_means else 0.0
+    )
+
+    print(f"score_by_data_source/mean@32: {source_level_score}")
+    print(f"pass_by_data_source/mean@32: {source_level_pass}")
 
     log_path = output_dir / f"eval_{timestamp}.log"
     with log_path.open("w", encoding="utf-8") as f:
         f.write(f"jsonl_file: {out_path}\n")
         f.write(f"num_samples: {len(df)}\n")
-        f.write(f"acc/mean@32: {avg_score:.6f}\n")
-        f.write(f"acc_by_data_source/mean@32: {source_level_acc:.6f}\n")
-        f.write("acc_by_data_source:\n")
-        for source in sorted(source_acc.keys()):
-            vals = source_acc[source]
-            f.write(f"  - {source}: {source_means[source]:.6f} ({len(vals)} samples)\n")
+        f.write(f"score/mean@32: {avg_score:.6f}\n")
+        f.write(f"pass@1/mean@32: {pass_rate:.6f}\n")
+        f.write(f"score_by_data_source/mean@32: {source_level_score:.6f}\n")
+        f.write(f"pass_by_data_source/mean@32: {source_level_pass:.6f}\n")
+
+        f.write("score_by_data_source:\n")
+        for source in sorted(source_scores.keys()):
+            vals = source_scores[source]
+            f.write(f"  - {source}: {source_score_means[source]:.6f} ({len(vals)} samples)\n")
+
+        f.write("pass_by_data_source:\n")
+        for source in sorted(source_pass.keys()):
+            vals = source_pass[source]
+            f.write(f"  - {source}: {source_pass_means[source]:.6f} ({len(vals)} samples)\n")
 
     print(f"Saved: {log_path}")
 
@@ -143,12 +218,13 @@ if __name__ == "__main__":
     parser.add_argument("--max_tokens", type=int, default=4096)
     parser.add_argument("--enable_thinking", type=str2bool, default=False)
     parser.add_argument("--model", type=str, default="/code/verl_learning/base_models/Qwen3-8B")
-    parser.add_argument("--test_file", type=str, default="/code/verl_learning/data/aime-2024.parquet")
+    parser.add_argument("--test_file", type=str, default="/code/verl_learning/data/test/code_test.parquet")
     parser.add_argument("--tensor_parallel_size", type=int, default=4)
     parser.add_argument("--trust_remote_code", type=str2bool, default=True)
     parser.add_argument("--dtype", type=str, default="bfloat16")
     parser.add_argument("--gpu_memory_utilization", type=float, default=0.90)
     parser.add_argument("--max_model_len", type=int, default=32768)
+    parser.add_argument("--eval_workers", type=int, default=8)
     parser.add_argument("--output_dir", type=str, default=".")
     args = parser.parse_args()
     print(args)

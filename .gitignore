@@ -12,6 +12,7 @@ eval_results/
 outputs/
 logs/
 wandb/
+rollout_log/
 *.pt
 *.pth
 *.bin
