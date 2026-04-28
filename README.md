@@ -22,12 +22,16 @@ pip install --no-deps -e .
 
 ## 数据集下载
 ```
+hf download meetforever/GRPO_CL --repo-type dataset --local-dir ./data
+```
 
+## base模型下载
+```
+hf download Qwen/Qwen3-8B --local-dir ./basemodel/Qwen3-8B
 ```
 
 ## 训练脚本
-位于```scripts_train```文件夹下
-需要修改的参数：
+训练脚本位于```scripts_train```文件夹下，需要修改的参数：
 ```
 ROOT=/code/verl_learning # 修改为你的路径
 EXP_NAME=DrGRPO_new_math_chem_bio_code_qwen3-8B # 本次实验名
@@ -48,6 +52,9 @@ TEST_ROLLOUT_LOG=${ROOT}/rollout_log/${WANDB_PROJECT}/test_${EXP_NAME}
 
 ```
 
+默认启用```wandb```进行训练监控（在脚本中```trainer.logger='["console","wandb"]'```设置），需登录wandb账号
+
+
 目前默认使用DrGRPO训练，通过如下设置切换：
 ```
 # 标准GRPO
@@ -65,3 +72,6 @@ algorithm.norm_adv_by_std_in_grpo=False
 
 将KL约束修改为JSD约束：
 在```/verl/trainer/ppo/core_algos.py:line 2152```kl_penalty_forward中新增JSD约束计算方式, 并修改```actor_rollout_ref.actor.kl_loss_type=jsd```
+
+## 测试
+在```scripts_eval```中运行测试脚本，需要修改模型权重路径，以及测试数据文件路径。
