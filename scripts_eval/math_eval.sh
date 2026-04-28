@@ -12,8 +12,8 @@ EVAL_DATA=${ROOT}/data/test/math/aime24_math500_olympiad.parquet
 
 # MODEL_PATH=${ROOT}/base_models/Qwen3-8B
 # OUTPUT_DIR=${ROOT}/eval_results/Qwen3-8B/math
-MODEL_PATH=${ROOT}/checkpoints/DrGRPO/DrGRPO_math_chem_qwen3-8B/global_step_160/hf_model
-OUTPUT_DIR=${ROOT}/eval_results/DrGRPO/DrGRPO_math_chem_qwen3-8B_step160/math
+MODEL_PATH=${ROOT}/checkpoints/DrGRPO_new/DrGRPO_new_math_chem_bio_qwen3-8B/global_step_380/hf_model
+OUTPUT_DIR=${ROOT}/eval_results/DrGRPO_new/DrGRPO_new_math_chem_bio_qwen3-8B_step380/math
 
 mkdir -p $OUTPUT_DIR
 

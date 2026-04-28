@@ -8,11 +8,11 @@ TP_SIZE=4
 
 ROOT=/code/verl_learning
 
-EVAL_DATA=${ROOT}/data/test/bio_med/PQA_test_reagent_operation.parquet
+EVAL_DATA=${ROOT}/data/test/bio_med/bioprobench_pqa_test.parquet
 # MODEL_PATH=${ROOT}/base_models/Qwen3-8B
-# OUTPUT_DIR=${ROOT}/eval_results/Qwen3-8B/bio_med
-MODEL_PATH=${ROOT}/checkpoints/DrGRPO_OrderI/DrGRPO_math_chem_qwen3-8B/global_step_160/hf_model
-OUTPUT_DIR=${ROOT}/eval_results/DrGRPO/DrGRPO_math_chem_bio_qwen3-8B_step160/bio_med
+# OUTPUT_DIR=${ROOT}/eval_results/Qwen3-8B/bioprobench
+MODEL_PATH=${ROOT}/checkpoints/DrGRPO_new/DrGRPO_new_math_chem_bio_qwen3-8B/global_step_380/hf_model
+OUTPUT_DIR=${ROOT}/eval_results/DrGRPO_new/DrGRPO_new_math_chem_bio_qwen3-8B_step380/bioprobench
 
 mkdir -p $OUTPUT_DIR
 

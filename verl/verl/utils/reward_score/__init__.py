@@ -59,7 +59,9 @@ def default_compute_score(
     elif data_source in ["math_dapo", "math", "math_dapo_reasoning"] \
         or data_source.startswith("aime") \
         or data_source.startswith("sciknoweval") \
-        or data_source.startswith("bioprobench"):
+        or data_source.startswith("bioprobench") \
+        or data_source.startswith("legalbench") \
+        or data_source.startswith("contract") :
         from . import math_dapo
 
         res = math_dapo.compute_score(solution_str, ground_truth)

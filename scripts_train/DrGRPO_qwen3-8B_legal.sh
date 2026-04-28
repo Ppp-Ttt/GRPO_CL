@@ -5,14 +5,14 @@ set -x
 
 ROOT=/code/verl_learning
 
-EXP_NAME=DrGRPO_new_math_chem_bio_qwen3-8B
-WANDB_PROJECT="DrGRPO_new"
+EXP_NAME=DrGRPO_math_chem_bio_code_law_qwen3-8B
+WANDB_PROJECT="DrGRPO"
 
 # MODEL_PATH=${ROOT}/base_models/Qwen3-8B
-MODEL_PATH=${ROOT}/checkpoints/DrGRPO/DrGRPO_math_chem_qwen3-8B/global_step_380/hf_model
+MODEL_PATH=${ROOT}/checkpoints/DrGRPO/DrGRPO_math_chem_bio_code_qwen3-8B/global_step_380/hf_model
 CKPTS_DIR=${ROOT}/checkpoints/${WANDB_PROJECT}/${EXP_NAME}
-TRAIN_DATA_FILES=${ROOT}/data/train/bio_med/bioprobench_pqa_train5k.parquet
-TEST_DATA_FILES=${ROOT}/data/test/bio_med/bioprobench_pqa_test.parquet
+TRAIN_DATA_FILES=${ROOT}/data/train/contract_nli_train_mcq.parquet
+TEST_DATA_FILES=${ROOT}/data/test/contract_nli_test_mcq.parquet
 TRAIN_ROLLOUT_LOG=${ROOT}/rollout_log/${WANDB_PROJECT}/train_${EXP_NAME}
 TEST_ROLLOUT_LOG=${ROOT}/rollout_log/${WANDB_PROJECT}/test_${EXP_NAME}
 
@@ -82,5 +82,5 @@ python3 -m verl.trainer.main_ppo \
     trainer.test_freq=20 \
     trainer.max_actor_ckpt_to_keep=5 \
     trainer.max_critic_ckpt_to_keep=5 \
-    trainer.total_training_steps=460  \
+    trainer.total_epochs=3 \
     trainer.default_local_dir="${CKPTS_DIR}" $@

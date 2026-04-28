@@ -78,9 +78,9 @@ python3 -m verl.trainer.main_ppo \
     trainer.n_gpus_per_node=${N_GPUS_PER_NODE} \
     trainer.nnodes=1 \
     trainer.val_before_train=False \
-    trainer.save_freq=10 \
+    trainer.save_freq=20 \
     trainer.test_freq=10 \
-    trainer.max_actor_ckpt_to_keep=7 \
-    trainer.max_critic_ckpt_to_keep=7 \
-    trainer.total_epochs=7 \
+    trainer.max_actor_ckpt_to_keep=6 \
+    trainer.max_critic_ckpt_to_keep=6 \
+    trainer.total_epochs=15 \
     trainer.default_local_dir="${CKPTS_DIR}" $@

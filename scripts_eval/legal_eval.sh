@@ -7,11 +7,11 @@ export CUDA_VISIBLE_DEVICES=0,1,2,3
 TP_SIZE=4
 
 ROOT=/code/verl_learning
-EVAL_DATA=${ROOT}/data/test/chem/chem-L3.parquet
+EVAL_DATA=${ROOT}/data/test/contract_nli_test_mcq.parquet
 # MODEL_PATH=${ROOT}/base_models/Qwen3-8B
-# OUTPUT_DIR=${ROOT}/eval_results/Qwen3-8B_chem
-MODEL_PATH=${ROOT}/checkpoints/DrGRPO_new/DrGRPO_new_math_chem_bio_qwen3-8B/global_step_380/hf_model
-OUTPUT_DIR=${ROOT}/eval_results/DrGRPO_new/DrGRPO_new_math_chem_bio_qwen3-8B_step380/chem
+# OUTPUT_DIR=${ROOT}/eval_results/Qwen3-8B/contract
+MODEL_PATH=${ROOT}/checkpoints/DrGRPO/DrGRPO_math_chem_bio_code_law_qwen3-8B/global_step_220/hf_model
+OUTPUT_DIR=${ROOT}/eval_results/DrGRPO/DrGRPO_math_chem_bio_code_law_qwen3-8B_step220/law
 
 mkdir -p $OUTPUT_DIR
 

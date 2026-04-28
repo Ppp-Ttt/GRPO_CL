@@ -2184,6 +2184,9 @@ def kl_penalty_forward(logprob: torch.FloatTensor, ref_logprob: torch.FloatTenso
         # so, here logprob and ref_logprob should contain the logits for every token in vocabulary
         raise NotImplementedError
 
+    
+
+
     raise NotImplementedError
 
 

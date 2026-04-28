@@ -9,13 +9,57 @@ TP_SIZE=4
 ROOT=/code/verl_learning
 
 # 请替换为你的代码评测数据 parquet，要求至少包含 prompt 与 reward_model.ground_truth
-EVAL_DATA=${ROOT}/data/test/code_test.parquet
-MODEL_PATH=${ROOT}/base_models/Qwen3-8B
-OUTPUT_DIR=${ROOT}/eval_results/Qwen3-8B/code
+EVAL_DATA=${ROOT}/data/test/apps_test.parquet
+# MODEL_PATH=${ROOT}/base_models/Qwen3-8B
+# OUTPUT_DIR=${ROOT}/eval_results/Qwen3-8B/code_test
 
 # 示例：评测 checkpoint
-# MODEL_PATH=${ROOT}/checkpoints/DrGRPO_xxx/global_step_xxx/hf_model
-# OUTPUT_DIR=${ROOT}/eval_results/DrGRPO_xxx/code
+MODEL_PATH=${ROOT}/checkpoints/DrGRPO_new/DrGRPO_new_math_chem_bio_code_qwen3-8B/global_step_720/hf_model
+OUTPUT_DIR=${ROOT}/eval_results/DrGRPO_new/DrGRPO_new_math_chem_bio_code_qwen3-8B_step720/code
+
+mkdir -p $OUTPUT_DIR
+
+python /code/verl_learning/eval/eval_code.py \
+  --test_file $EVAL_DATA \
+  --model $MODEL_PATH \
+  --temperature 0.6 \
+  --top_p 0.95 \
+  --top_k 20 \
+  --min_p 0 \
+  --max_tokens 8192 \
+  --enable_thinking False \
+  --tensor_parallel_size $TP_SIZE \
+  --dtype bfloat16 \
+  --gpu_memory_utilization 0.80 \
+  --max_model_len 16384 \
+  --eval_workers 8 \
+  --output_dir $OUTPUT_DIR
+
+
+MODEL_PATH=${ROOT}/checkpoints/DrGRPO_new/DrGRPO_new_math_chem_bio_code_qwen3-8B/global_step_640/hf_model
+OUTPUT_DIR=${ROOT}/eval_results/DrGRPO_new/DrGRPO_new_math_chem_bio_code_qwen3-8B_step640/code
+
+mkdir -p $OUTPUT_DIR
+
+python /code/verl_learning/eval/eval_code.py \
+  --test_file $EVAL_DATA \
+  --model $MODEL_PATH \
+  --temperature 0.6 \
+  --top_p 0.95 \
+  --top_k 20 \
+  --min_p 0 \
+  --max_tokens 8192 \
+  --enable_thinking False \
+  --tensor_parallel_size $TP_SIZE \
+  --dtype bfloat16 \
+  --gpu_memory_utilization 0.80 \
+  --max_model_len 16384 \
+  --eval_workers 8 \
+  --output_dir $OUTPUT_DIR
+
+
+MODEL_PATH=${ROOT}/checkpoints/DrGRPO_new/DrGRPO_new_math_chem_bio_code_qwen3-8B/global_step_560/hf_model
+OUTPUT_DIR=${ROOT}/eval_results/DrGRPO_new/DrGRPO_new_math_chem_bio_code_qwen3-8B_step560/code
 
 mkdir -p $OUTPUT_DIR
 

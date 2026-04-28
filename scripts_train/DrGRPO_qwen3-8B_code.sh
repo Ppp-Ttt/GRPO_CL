@@ -5,14 +5,14 @@ set -x
 
 ROOT=/code/verl_learning
 
-EXP_NAME=DrGRPO_new_math_chem_bio_qwen3-8B
+EXP_NAME=DrGRPO_new_math_chem_bio_code_qwen3-8B
 WANDB_PROJECT="DrGRPO_new"
 
 # MODEL_PATH=${ROOT}/base_models/Qwen3-8B
-MODEL_PATH=${ROOT}/checkpoints/DrGRPO/DrGRPO_math_chem_qwen3-8B/global_step_380/hf_model
+MODEL_PATH=${ROOT}/checkpoints/DrGRPO_new/DrGRPO_new_math_chem_bio_qwen3-8B/global_step_380/hf_model
 CKPTS_DIR=${ROOT}/checkpoints/${WANDB_PROJECT}/${EXP_NAME}
-TRAIN_DATA_FILES=${ROOT}/data/train/bio_med/bioprobench_pqa_train5k.parquet
-TEST_DATA_FILES=${ROOT}/data/test/bio_med/bioprobench_pqa_test.parquet
+TRAIN_DATA_FILES=${ROOT}/data/train/apps_train_filtered.parquet
+TEST_DATA_FILES=${ROOT}/data/test/apps_test_subset500.parquet
 TRAIN_ROLLOUT_LOG=${ROOT}/rollout_log/${WANDB_PROJECT}/train_${EXP_NAME}
 TEST_ROLLOUT_LOG=${ROOT}/rollout_log/${WANDB_PROJECT}/test_${EXP_NAME}
 
@@ -52,6 +52,7 @@ python3 -m verl.trainer.main_ppo \
     actor_rollout_ref.actor.fsdp_config.param_offload=True \
     actor_rollout_ref.actor.fsdp_config.optimizer_offload=True \
     actor_rollout_ref.actor.strategy=fsdp2 \
+    actor_rollout_ref.rollout.agent.num_workers=4 \
     actor_rollout_ref.rollout.log_prob_micro_batch_size_per_gpu=8 \
     actor_rollout_ref.rollout.tensor_model_parallel_size=1 \
     actor_rollout_ref.rollout.name=vllm \
@@ -78,9 +79,9 @@ python3 -m verl.trainer.main_ppo \
     trainer.n_gpus_per_node=${N_GPUS_PER_NODE} \
     trainer.nnodes=1 \
     trainer.val_before_train=False \
-    trainer.save_freq=20 \
+    trainer.save_freq=40 \
     trainer.test_freq=20 \
     trainer.max_actor_ckpt_to_keep=5 \
     trainer.max_critic_ckpt_to_keep=5 \
-    trainer.total_training_steps=460  \
+    trainer.total_training_steps=800  \
     trainer.default_local_dir="${CKPTS_DIR}" $@
